@@ -1,0 +1,5 @@
+.env
+.playwright-mcp/
+*.png
+node_modules/
+dev.log
