@@ -32,5 +32,7 @@
 - [x] .gitignore 생성
 - [x] API 키 하드코딩 제거 (VAST_GPU_GUIDE.md)
 - [x] 임시 파일 정리 (.playwright-mcp/, *.png)
-- [ ] 작업 완료 후 인스턴스 삭제
-- [ ] 비용 확인
+- [x] 작업 완료 후 인스턴스 삭제 (ID: 34349111)
+- [x] 비용 확인 (총 $1.92 / 1.52시간)
+- [x] Open WebUI 컨테이너 중지
+- [x] GitHub 저장소 생성 및 푸시 (ldmrepo/gemma4-cli)
