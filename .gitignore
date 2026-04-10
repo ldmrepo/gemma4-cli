@@ -3,3 +3,7 @@
 *.png
 node_modules/
 dev.log
+
+# Playwright test results
+todo-app/playwright-report/
+todo-app/test-results/
