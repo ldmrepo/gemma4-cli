@@ -1,22 +1,22 @@
 {
   "$schema": "https://opencode.ai/config.json",
   "provider": {
-    "gemma4": {
+    "qwen-coder": {
       "npm": "@ai-sdk/openai-compatible",
-      "name": "Gemma 4 31B (Vast.ai)",
+      "name": "Qwen3-Coder-Next (Vast.ai)",
       "options": {
         "baseURL": "http://127.0.0.1:8000/v1"
       },
       "models": {
-        "gemma-4-31B-it-Q8_0.gguf": {
-          "name": "Gemma 4 31B Q8",
+        "Qwen/Qwen3-Coder-Next-FP8": {
+          "name": "Qwen3 Coder Next FP8",
           "limit": {
-            "context": 262144,
+            "context": 32768,
             "output": 8192
           }
         }
       }
     }
   },
-  "model": "gemma4/gemma-4-31B-it-Q8_0.gguf"
+  "model": "qwen-coder/Qwen/Qwen3-Coder-Next-FP8"
 }

@@ -36,3 +36,42 @@
 - [x] 비용 확인 (총 $1.92 / 1.52시간)
 - [x] Open WebUI 컨테이너 중지
 - [x] GitHub 저장소 생성 및 푸시 (ldmrepo/gemma4-cli)
+
+---
+
+# Qwen3-Coder-Next + vLLM + Qwen Code 구성 TODO
+
+## Phase 1: Vast.ai 서버 준비
+- [x] GPU 검색 (80GB+ VRAM, 200GB+ 디스크)
+- [x] 인스턴스 생성 (ID: 34497223, H100 NVL 96GB, $1.77/hr)
+- [x] 디스크 부족 이슈 → 200GB 디스크로 재생성
+
+## Phase 2: vLLM 서버
+- [x] vLLM이 qwen3_next 아키텍처 정상 인식
+- [x] 모델 다운로드 (~80GB, ~5분)
+- [x] 모델 로드 (74.9GB VRAM, 22초)
+- [x] DeepGEMM 워밍업 (3549 커널)
+- [x] CUDA 그래프 캡처 완료
+- [x] API 서버 시작 완료
+
+## Phase 3: 클라이언트 연결
+- [x] SSH 터널 설정 (localhost:8000)
+- [x] API 테스트 성공
+- [x] OpenCode 시도 → tool calling 호환 문제로 반복 루프 발생
+- [x] 커뮤니티 조사: hermes/qwen3_xml/qwen3_coder 파서 모두 OpenCode와 비호환
+- [x] Qwen Code CLI 설치 (v0.14.2)
+- [x] ~/.qwen/settings.json 설정 완료
+
+## Phase 4: vLLM 설정 최적화
+- [x] --kv-cache-dtype fp8 → 충돌 (Hybrid 아키텍처 비호환)
+- [x] --attention-backend FLASH_ATTN → 충돌 (GDN 레이어 비호환)
+- [x] 최종 설정: --enable-prefix-caching --enable-auto-tool-choice --tool-call-parser qwen3_coder
+
+## Phase 5: 문서화
+- [x] QWEN_CODER_GUIDE.md 업데이트 (Qwen Code 설정, 트러블슈팅, OpenCode 비호환 기록)
+- [x] TODO.md 업데이트
+
+## Phase 6: 사용 및 정리
+- [ ] Qwen Code로 마크다운 메모 앱 프로젝트 진행
+- [ ] 작업 완료 후 인스턴스 삭제 (ID: 34497223)
+- [ ] 최종 비용 확인
