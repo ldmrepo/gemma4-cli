@@ -1,0 +1,25 @@
+{
+  "name": "markdown-notes-app",
+  "version": "1.0.0",
+  "description": "Markdown note-taking app with React + Express + SQLite",
+  "main": "backend/src/server.js",
+  "scripts": {
+    "backend": "cd backend && npm run dev",
+    "frontend": "cd todo-app && npm run dev",
+    "dev": "concurrently \"npm run backend\" \"npm run frontend\"",
+    "build": "cd todo-app && npm run build",
+    "start": "cd backend && npm start"
+  },
+  "keywords": [
+    "markdown",
+    "notes",
+    "react",
+    "express",
+    "sqlite"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}

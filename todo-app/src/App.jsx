@@ -1,126 +1,265 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import './App.css';
+
+const API_URL = '/api/notes';
 
 function App() {
-  const [todos, setTodos] = useState(() => {
-    const saved = localStorage.getItem('modern-todos');
-    return saved ? JSON.parse(saved) : [];
-  });
-  const [inputValue, setInputValue] = useState('');
-  const [filter, setFilter] = useState('all');
+  const [notes, setNotes] = useState([]);
+  const [currentNote, setCurrentNote] = useState(null);
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
+  const [tags, setTags] = useState('');
+  const [filterTag, setFilterTag] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [allTags, setAllTags] = useState([]);
+  const [selectedNoteIds, setSelectedNoteIds] = useState(new Set());
 
+  // Load notes on mount
   useEffect(() => {
-    localStorage.setItem('modern-todos', JSON.stringify(todos));
-  }, [todos]);
+    fetchNotes();
+  }, [filterTag]);
 
-  const addTodo = () => {
-    if (inputValue.trim() === '') return;
-    const newTodo = {
-      id: Date.now(),
-      text: inputValue,
-      completed: false,
-      createdAt: new Date().toISOString(),
+  // Load all tags
+  useEffect(() => {
+    fetchTags();
+  }, []);
+
+  const fetchNotes = async () => {
+    try {
+      let url = `${API_URL}`;
+      if (filterTag) {
+        url = `${API_URL}/tag/${encodeURIComponent(filterTag)}`;
+      } else if (searchQuery) {
+        url = `${API_URL}/search?q=${encodeURIComponent(searchQuery)}`;
+      }
+      
+      const response = await fetch(url);
+      const data = await response.json();
+      setNotes(data);
+    } catch (error) {
+      console.error('Error fetching notes:', error);
+    }
+  };
+
+  const fetchTags = async () => {
+    try {
+      const response = await fetch(`${API_URL}/tags`);
+      const data = await response.json();
+      setAllTags(data);
+    } catch (error) {
+      console.error('Error fetching tags:', error);
+    }
+  };
+
+  const handleSelectNote = async (note) => {
+    if (selectedNoteIds.has(note.id)) {
+      // Delete note
+      try {
+        await fetch(`${API_URL}/${note.id}`, {
+          method: 'DELETE'
+        });
+        fetchNotes();
+        if (currentNote?.id === note.id) {
+          setCurrentNote(null);
+          setTitle('');
+          setContent('');
+          setTags('');
+        }
+      } catch (error) {
+        console.error('Error deleting note:', error);
+      }
+    } else {
+      // Select note for editing
+      setCurrentNote(note);
+      setTitle(note.title);
+      setContent(note.content);
+      setTags(note.tags || '');
+      setSelectedNoteIds(new Set([note.id]));
+    }
+  };
+
+  const handleCreateNew = () => {
+    setCurrentNote(null);
+    setTitle('');
+    setContent('');
+    setTags('');
+    setSelectedNoteIds(new Set());
+  };
+
+  const handleSave = async () => {
+    if (!title.trim() || !content.trim()) {
+      alert('Title and content are required!');
+      return;
+    }
+
+    const noteData = {
+      title: title.trim(),
+      content: content.trim(),
+      tags: tags.trim()
     };
-    setTodos([newTodo, ...todos]);
-    setInputValue('');
+
+    try {
+      if (currentNote) {
+        await fetch(`${API_URL}/${currentNote.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(noteData)
+        });
+      } else {
+        await fetch(`${API_URL}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(noteData)
+        });
+      }
+      fetchNotes();
+      handleCreateNew();
+    } catch (error) {
+      console.error('Error saving note:', error);
+    }
   };
 
-  const toggleTodo = (id) => {
-    setTodos(
-      todos.map((todo) =>
-        todo.id === id ? { ...todo, completed: !todo.completed } : todo
-      )
-    );
+  const handleSearch = (e) => {
+    setSearchQuery(e.target.value);
+    if (e.target.value) {
+      setFilterTag(null);
+    }
   };
 
-  const deleteTodo = (id) => {
-    setTodos(todos.filter((todo) => todo.id !== id));
-  };
-
-  const clearCompleted = () => {
-    setTodos(todos.filter((todo) => !todo.completed));
-  };
-
-  const filteredTodos = todos.filter((todo) => {
-    if (filter === 'active') return !todo.completed;
-    if (filter === 'completed') return todo.completed;
-    return true;
-  });
-
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter') addTodo();
+  const handleTagFilter = (tagName) => {
+    setFilterTag(tagName);
+    setSearchQuery('');
   };
 
   return (
-    <div className="app-wrapper">
-      <div className="app-container">
-        <header className="app-header">
-          <h1>TaskFlow</h1>
-          <p className="subtitle">Organize your day with precision</p>
-        </header>
+    <div className="app">
+      <header className="app-header">
+        <h1>📝 Markdown Notes</h1>
+        <div className="header-actions">
+          <button onClick={handleCreateNew} className="btn btn-primary">
+            + New Note
+          </button>
+        </div>
+      </header>
 
-        <div className="input-section">
-          <div className="input-group">
+      <div className="main-content">
+        {/* Sidebar with tags and search */}
+        <aside className="sidebar">
+          <div className="search-box">
             <input
               type="text"
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="What needs to be done?"
+              placeholder="Search notes..."
+              value={searchQuery}
+              onChange={handleSearch}
+              className="search-input"
             />
-            <button className="add-btn" onClick={addTodo}>
-              <span>Add Task</span>
-            </button>
           </div>
-        </div>
 
-        <div className="controls-section">
-          <div className="filter-group">
-            {['all', 'active', 'completed'].map((f) => (
-              <button
-                key={f}
-                className={`filter-btn ${filter === f ? 'active' : ''}`}
-                onClick={() => setFilter(f)}
-              >
-                {f.charAt(0).toUpperCase() + f.slice(1)}
-              </button>
-            ))}
-          </div>
-          {todos.some(t => t.completed) && (
-            <button className="clear-btn" onClick={clearCompleted}>
-              Clear Completed
-            </button>
-          )}
-        </div>
-
-        <ul className="todo-list">
-          {filteredTodos.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-icon">📝</div>
-              <p>{filter === 'all' ? 'No tasks yet. Start your flow!' : `No ${filter} tasks found.`}</p>
-            </div>
-          ) : (
-            filteredTodos.map((todo) => (
-              <li key={todo.id} className={`todo-item ${todo.completed ? 'completed' : ''}`}>
-                <div className="todo-content" onClick={() => toggleTodo(todo.id)}>
-                  <div className="checkbox">
-                    {todo.completed && <span className="checkmark">✓</span>}
-                  </div>
-                  <span className="todo-text">{todo.text}</span>
-                </div>
-                <button className="delete-btn" onClick={() => deleteTodo(todo.id)}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="3 6 5 6 21 6"></polyline>
-                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                  </svg>
+          <div className="tags-section">
+            <h3 className="section-title">Tags</h3>
+            <div className="tags-list">
+              {allTags.map(tag => (
+                <button
+                  key={tag.name}
+                  onClick={() => handleTagFilter(tag.name)}
+                  className={`tag-btn ${filterTag === tag.name ? 'active' : ''}`}
+                >
+                  <span className="tag-name">{tag.name}</span>
+                  <span className="tag-count">{tag.note_count}</span>
                 </button>
-              </li>
-            ))
-          )}
-        </ul>
-        
-        <footer className="app-footer">
-          <span>{todos.filter(t => !t.completed).length} items left</span>
-        </footer>
+              ))}
+            </div>
+          </div>
+
+          <div className="sidebar-footer">
+            <span className="note-count">{notes.length} notes</span>
+          </div>
+        </aside>
+
+        {/* Notes list */}
+        <div className="notes-list">
+          <h2 className="list-title">
+            {filterTag ? `Tag: ${filterTag}` : searchQuery ? `Search: ${searchQuery}` : 'All Notes'}
+          </h2>
+          <div className="notes-grid">
+            {notes.map(note => (
+              <div
+                key={note.id}
+                onClick={() => handleSelectNote(note)}
+                className={`note-item ${selectedNoteIds.has(note.id) ? 'selected' : ''}`}
+              >
+                <h3 className="note-title">{note.title}</h3>
+                <p className="note-preview">{note.content.substring(0, 100)}...</p>
+                {note.tags && (
+                  <div className="note-tags">
+                    {note.tags.split(', ').map(tag => (
+                      <span key={tag} className="note-tag">{tag}</span>
+                    ))}
+                  </div>
+                )}
+                <span className="note-date">
+                  {new Date(note.updated_at).toLocaleDateString()}
+                </span>
+              </div>
+            ))}
+            {notes.length === 0 && (
+              <div className="empty-state">
+                No notes found. Create your first note!
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Editor panel */}
+        <div className="editor-panel">
+          <div className="editor-header">
+            <h2>{currentNote ? 'Edit Note' : 'Create Note'}</h2>
+            <button onClick={handleSave} className="btn btn-save">
+              💾 Save
+            </button>
+          </div>
+
+          <div className="editor-content">
+            <input
+              type="text"
+              placeholder="Title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="note-input title-input"
+            />
+            
+            <textarea
+              placeholder="Write in Markdown..."
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              className="note-input content-input"
+              rows={10}
+            />
+
+            <input
+              type="text"
+              placeholder="Tags (comma-separated)"
+              value={tags}
+              onChange={(e) => setTags(e.target.value)}
+              className="note-input tags-input"
+            />
+          </div>
+
+          <div className="preview-section">
+            <h3>Preview</h3>
+            <div className="markdown-preview">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {content}
+              </ReactMarkdown>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
