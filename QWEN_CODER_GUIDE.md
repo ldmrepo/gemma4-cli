@@ -225,11 +225,33 @@ OpenCode + vLLM + Qwen3-Coder-Next는 알려진 호환성 문제:
 | 비용/hr | $1.26 | $1.77 |
 | 클라이언트 | Open WebUI, OpenCode | **Qwen Code** (권장) |
 
-## 비용 참고
+## 비용 실적
 
 | 항목 | 값 |
 |------|-----|
 | GPU | H100 NVL (96GB), Virginia |
 | 비용/hr | $1.77 |
-| 2시간 | ~$3.54 |
-| 4시간 | ~$7.08 |
+| 실제 사용 시간 | 2.13시간 |
+| **실제 비용** | **$3.76** |
+
+## Context Length 이슈
+
+Qwen Code는 대화가 길어지면 context를 빠르게 소비합니다:
+
+| 설정 | 결과 |
+|------|------|
+| 32K | Phase 1 중 초과 |
+| 64K | Phase 1 완료 후 초과 |
+| 128K | Phase 2 중 초과 |
+| **256K** | **전체 작업 가능** (VLLM_ALLOW_LONG_MAX_MODEL_LEN=1 필요) |
+
+**권장 시작 명령**:
+```bash
+VLLM_ALLOW_LONG_MAX_MODEL_LEN=1 vllm serve Qwen/Qwen3-Coder-Next-FP8 \
+  --host 0.0.0.0 --port 8000 \
+  --max-model-len 262144 \
+  --enable-prefix-caching \
+  --enable-auto-tool-choice \
+  --tool-call-parser qwen3_coder \
+  --gpu-memory-utilization 0.95
+```

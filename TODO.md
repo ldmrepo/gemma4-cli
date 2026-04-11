@@ -76,5 +76,8 @@
 - [x] 마크다운 메모 앱 완료 (CRUD, 태그, 검색, 미리보기)
 - [x] 서버 및 프론트엔드 테스트 완료
 - [x] scripts/start-app.bat, stop-app.bat 추가
-- [ ] 작업 완료 후 인스턴스 삭제 (ID: 34497223)
-- [ ] 최종 비용 확인
+- [x] Context length 이슈: 32K→64K→128K→256K 단계적 확장
+- [x] 최종 vLLM 설정: 256K + VLLM_ALLOW_LONG_MAX_MODEL_LEN=1
+- [x] 실시간 협업 코드 에디터 요구사항 작성 (REALTIME_EDITOR_SPEC.md)
+- [x] 작업 완료 후 인스턴스 삭제 (ID: 34497223)
+- [x] 최종 비용 확인 ($3.76 / 2.13시간)
